@@ -56,6 +56,8 @@ public class MainActivity extends AppCompatActivity {
     private GalleryPhoto galleryPhoto;
     private ProgressDialog progressDialog;
 
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -89,37 +91,19 @@ public class MainActivity extends AppCompatActivity {
         updateRecyclerView();
     }
 
-    private void requestPermissions() {
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE)
-                != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(this, new String[] {
-                    Manifest.permission.READ_EXTERNAL_STORAGE }, REQUEST_PERMISSION);
-        }
-    }
-
     @OnClick(R.id.fab)
     public void addPhoto(){
 
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE)
-                != PackageManager.PERMISSION_GRANTED) {
-            requestPermissions();
-        } else {
-            updateRecyclerView();
-            galleryPhoto = new GalleryPhoto(this);
-            Intent in = galleryPhoto.openGalleryIntent();
-            startActivityForResult(in, GALLERY_REQUEST);
-        }
+
     }
 
     private void updateRecyclerView(){
         progressDialog.show();
-        client.get(this, "http://192.168.130.196:5000/imagelist", new JsonHttpResponseHandler() {
+        client.get(this, "https://adsd.herokuapp.com/images", new JsonHttpResponseHandler() {
             
             @Override
             public void onSuccess(int statusCode, Header[] headers, JSONArray timeline) {
                 List<String> newImagesList = new ArrayList<>();
-
-                Log.d("ssa", timeline+"");
 
                 for (int i = 0; i < timeline.length(); i++) {
                     try {
@@ -143,46 +127,5 @@ public class MainActivity extends AppCompatActivity {
                 
             }
         });
-    }
-
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        if (resultCode == RESULT_OK) {
-            if (requestCode == GALLERY_REQUEST) {
-                galleryPhoto.setPhotoUri(data.getData());
-                String photoPath = galleryPhoto.getPath();
-                try {
-                    Bitmap bitmap = ImageLoader.init().from(photoPath).requestSize(512, 512).getBitmap();
-                    ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-                    bitmap.compress(Bitmap.CompressFormat.PNG, 100, byteArrayOutputStream);
-                    byte[] byteArray = byteArrayOutputStream.toByteArray();
-
-                    String encoded = Base64.encodeToString(byteArray, Base64.DEFAULT);
-                    RequestParams requestParams = new RequestParams();
-                    requestParams.put("title", encoded);
-                    client.post(this, "http://192.168.130.196:5000/imagelist", requestParams, new JsonHttpResponseHandler() {
-                        @Override
-                        public void onSuccess(int statusCode, Header[] headers, JSONObject response) {
-
-                        }
-                    });
-                } catch (FileNotFoundException e) {
-                    e.printStackTrace();
-                }
-            }
-        }//end
-    }
-
-    @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String permissions[],
-                                           @NonNull int[] grantResults) {
-        switch (requestCode) {
-            case REQUEST_PERMISSION: {
-                if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED
-                        && grantResults[1] == PackageManager.PERMISSION_GRANTED) {
-                    addPhoto();
-                }
-            }
-        }
     }
 }
