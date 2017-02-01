@@ -1,24 +1,27 @@
 package miserlyspark.com.projeto_adsd_app;
 
-import android.content.Context;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ImageView;
+import android.widget.TextView;
 
-import com.bumptech.glide.Glide;
+import com.loopj.android.http.AsyncHttpClient;
 
 import java.util.List;
 
 class PhotoAdapter extends RecyclerView.Adapter<PhotoAdapter.ViewHolder>{
 
-    private final Context context;
-    private List<String> mImagesList;
+    private List<String> list;
 
-    PhotoAdapter(List<String> images, Context context) {
-        this.context = context;
-        this.mImagesList = images;
+    private OnItemClickedListener mItemClickListener;
+
+    public void setOnItemClickedListener(OnItemClickedListener l) {
+        mItemClickListener = l;
+    }
+
+    PhotoAdapter(List<String> list) {
+        this.list = list;
     }
 
     @Override
@@ -31,34 +34,41 @@ class PhotoAdapter extends RecyclerView.Adapter<PhotoAdapter.ViewHolder>{
 
     @Override
     public void onBindViewHolder(ViewHolder holder, int position) {
-        Glide
-                .with(context)
-                .load(decodeBase64(mImagesList.get(position)))
-                .asBitmap()
-                .into(holder.imageView);
+        holder.textView.setText(list.get(position));
     }
 
     public void updateImageList(List<String> images){
-        this.mImagesList = images;
+        this.list = images;
         notifyDataSetChanged();
     }
 
     @Override
     public int getItemCount() {
-        return mImagesList.size();
-    }
-
-    private byte[] decodeBase64(String imageBase64){
-        return null;
+        return list.size();
     }
 
     class ViewHolder extends RecyclerView.ViewHolder {
         // each data item is just a string in this case
-        ImageView imageView;
+        TextView textView;
 
         ViewHolder(View v) {
             super(v);
-            this.imageView = (ImageView) v.findViewById(R.id.iv_photo);
+            this.textView = (TextView) v.findViewById(R.id.iv_text);
+            v.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    if (mItemClickListener != null) {
+                        final String id = textView.getText().toString();
+                        mItemClickListener.onItemClicked(id);
+                    }
+                }
+            });
         }
+
+
+    }
+
+    public interface OnItemClickedListener {
+        void onItemClicked(String id);
     }
 }
