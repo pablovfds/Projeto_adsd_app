@@ -6,6 +6,7 @@ import android.os.Bundle;
 import android.os.SystemClock;
 import android.provider.MediaStore;
 import android.provider.Settings;
+import android.support.design.widget.Snackbar;
 import android.support.test.rule.logging.LogDeviceGetPropInfoRule;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
@@ -48,8 +49,8 @@ public class MainActivity extends AppCompatActivity {
     private AsyncHttpClient client;
     private ProgressDialog progressDialog;
 
-    String url = "http://192.168.130.196:5000";
-    //String url = "https://adsd.herokuapp.com";
+//    String url = "http://192.168.130.196:5000";
+    String url = "https://adsd.herokuapp.com";
 
     String tam1000, tam100000;
 
@@ -131,6 +132,9 @@ public class MainActivity extends AppCompatActivity {
                 end = SystemClock.currentThreadTimeMillis();
                 Log.d("End", String.valueOf(end));
                 Log.d("Total", String.valueOf(end - begin));
+                Toast.makeText(getApplicationContext(), String.valueOf(end - begin), Toast.LENGTH_SHORT).show();
+
+
             }
 
             @Override
