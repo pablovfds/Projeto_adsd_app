@@ -41,15 +41,17 @@ import cz.msebera.android.httpclient.Header;
 
 public class MainActivity extends AppCompatActivity {
 
-    @BindView(R.id.my_recycler_view) RecyclerView mRecyclerView;
+    @BindView(R.id.my_recycler_view)
+    RecyclerView mRecyclerView;
 
-    @BindView(R.id.toolbar) Toolbar toolbar;
+    @BindView(R.id.toolbar)
+    Toolbar toolbar;
 
     private PhotoAdapter mAdapter;
     private AsyncHttpClient client;
     private ProgressDialog progressDialog;
 
-//    String url = "http://192.168.130.196:5000";
+    //    String url = "http://192.168.130.196:5000";
     String url = "https://adsd.herokuapp.com";
 
     String tam1000, tam100000;
@@ -93,12 +95,12 @@ public class MainActivity extends AppCompatActivity {
     }
 
     @OnClick(R.id.fab)
-    public void addPhoto(){
+    public void addPhoto() {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setTitle("Tamanho das palavras")
                 .setItems(R.array.testArray, new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int which) {
-                        if (which == 0){
+                        if (which == 0) {
                             postTextServer(tam1000);
                         } else {
                             postTextServer(tam100000);
@@ -108,83 +110,90 @@ public class MainActivity extends AppCompatActivity {
         builder.show();
     }
 
-    private void setRecycleView(){
+    private void setRecycleView() {
         mRecyclerView.setHasFixedSize(true);
         RecyclerView.LayoutManager mLayoutManager = new LinearLayoutManager(this);
         mLayoutManager.canScrollVertically();
         mRecyclerView.setLayoutManager(mLayoutManager);
     }
 
-    public void getItemById(String id){
+
+    public void getItemById(String id) {
         RequestParams requestParams = new RequestParams();
         requestParams.put("_id", id);
-        client.get(this, url +  "/image",requestParams, new JsonHttpResponseHandler() {
-            long begin;
-            long end;
-            @Override
-            public void onStart() {
-                begin = SystemClock.currentThreadTimeMillis();
-                Log.d("Begin", String.valueOf(begin));
-            }
-
-            @Override
-            public void onFinish() {
-                end = SystemClock.currentThreadTimeMillis();
-                Log.d("End", String.valueOf(end));
-                Log.d("Total", String.valueOf(end - begin));
-                Toast.makeText(getApplicationContext(), String.valueOf(end - begin), Toast.LENGTH_SHORT).show();
 
 
-            }
+            client.get(this, url + "/image", requestParams, new JsonHttpResponseHandler() {
+                long begin;
+                long end;
 
-            @Override
-            public void onSuccess(int statusCode, Header[] headers, JSONArray timeline) {
-                for (int i = 0; i < timeline.length(); i++) {
-                    try {
-                        Log.d("item", timeline.getJSONObject(i).getString("_id"));
-                    } catch (JSONException e) {
-                        e.printStackTrace();
+
+                @Override
+                public void onStart() {
+                    begin = SystemClock.currentThreadTimeMillis();
+
+                }
+
+                @Override
+                public void onFinish() {
+                    Log.d("End", String.valueOf(end));
+                    Log.d("Total", String.valueOf(end - begin));
+                    end = SystemClock.currentThreadTimeMillis();
+                    Toast.makeText(getApplicationContext(), String.valueOf(end - begin), Toast.LENGTH_SHORT).show();
+
+                }
+
+                @Override
+                public void onSuccess(int statusCode, Header[] headers, JSONArray timeline) {
+                    for (int i = 0; i < timeline.length(); i++) {
+                        try {
+                            Log.d("item", timeline.getJSONObject(i).getString("_id"));
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                        }
                     }
                 }
-            }
 
-            @Override
-            public void onFailure(int statusCode, Header[] headers, Throwable throwable, JSONObject errorResponse) {
-                super.onFailure(statusCode, headers, throwable, errorResponse);
-                Log.d("error", "get JSONObject");
-            }
+                @Override
+                public void onFailure(int statusCode, Header[] headers, Throwable throwable, JSONObject errorResponse) {
+                    super.onFailure(statusCode, headers, throwable, errorResponse);
+                    Log.d("error", "get JSONObject");
+                }
 
-            @Override
-            public void onFailure(int statusCode, Header[] headers, String responseString, Throwable throwable) {
-                super.onFailure(statusCode, headers, responseString, throwable);
-                Log.d("error", "get JSONObject");
-            }
+                @Override
+                public void onFailure(int statusCode, Header[] headers, String responseString, Throwable throwable) {
+                    super.onFailure(statusCode, headers, responseString, throwable);
+                    Log.d("error", "get JSONObject");
+                }
 
-            @Override
-            public void onFailure(int statusCode, Header[] headers, Throwable throwable, JSONArray errorResponse) {
-                super.onFailure(statusCode, headers, throwable, errorResponse);
-                Log.d("error", "get JSONObject");
-            }
-        });
-    }
+                @Override
+                public void onFailure(int statusCode, Header[] headers, Throwable throwable, JSONArray errorResponse) {
+                    super.onFailure(statusCode, headers, throwable, errorResponse);
+                    Log.d("error", "get JSONObject");
+                }
+            });
+        }
 
-    private void updateRecyclerView(){
+
+
+
+    private void updateRecyclerView() {
         progressDialog.show();
 
-        client.get(this, url +  "/imagelist", new JsonHttpResponseHandler() {
+        client.get(this, url + "/imagelist", new JsonHttpResponseHandler() {
 
             @Override
             public void onSuccess(int statusCode, Header[] headers, JSONArray timeline) {
-                for (int i = 0; i < timeline.length(); i++) {
+                for (int i = timeline.length()-1; i < timeline.length(); i++) {
                     try {
                         arrayList.add(timeline.getJSONObject(i).getString("_id"));
                     } catch (JSONException e) {
                         e.printStackTrace();
                     }
+                    progressDialog.dismiss();
+                    mAdapter.updateImageList(arrayList);
+                    Log.d("responde", mAdapter.getItemCount() + "");
                 }
-                progressDialog.dismiss();
-                mAdapter.updateImageList(arrayList);
-                Log.d("responde",mAdapter.getItemCount()+"");
             }
 
             @Override
@@ -208,42 +217,74 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
-
-    public void postTextServer(String text){
+    public void postTextServer(String text) {
         RequestParams requestParams = new RequestParams();
         requestParams.put("image", text);
-        client.post(url + "/image",requestParams, new JsonHttpResponseHandler(){
-            @Override
-            public void onSuccess(int statusCode, Header[] headers, JSONObject timeline) {
-               Log.d("foi", timeline.toString());
-                try {
-                    String id = timeline.getString("_id");
-                    arrayList.add(id);
-                    mAdapter.updateImageList(arrayList);
-                } catch (JSONException e) {
-                    e.printStackTrace();
+        long begin;
+        long end;
+        begin = SystemClock.currentThreadTimeMillis();
+
+        for (int i = 0; i < 99; i++) {
+
+
+            client.post(url + "/image", requestParams, new JsonHttpResponseHandler() {
+//                long begin;
+//                long end;
+
+//                @Override
+//                public void onStart() {
+//                    begin = SystemClock.currentThreadTimeMillis();
+//
+//                }
+
+                @Override
+                public void onSuccess(int statusCode, Header[] headers, JSONObject timeline) {
+                    Log.d("foi", timeline.toString());
+                    try {
+                        String id = timeline.getString("_id");
+                        arrayList.add(id);
+                        mAdapter.updateImageList(arrayList);
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                    }
                 }
-            }
 
-            @Override
-            public void onFailure(int statusCode, Header[] headers, Throwable throwable,
-                                  JSONObject errorResponse) {
-                Log.d("nao foi JSONObject", errorResponse.toString());
-            }
+//                @Override
+//                public void onFinish() {
+//                    end = SystemClock.currentThreadTimeMillis();
+//                    Log.d("End", String.valueOf(end));
+//                    Log.d("Total", String.valueOf(end - begin));
+//                    Toast.makeText(getApplicationContext(), String.valueOf(end - begin), Toast.LENGTH_SHORT).show();
+//                }
 
-            @Override
-            public void onFailure(int statusCode, Header[] headers, String responseString, Throwable throwable) {
-                super.onFailure(statusCode, headers, responseString, throwable);
-                Log.d("nao foi Throwable", responseString);
 
-            }
+                @Override
+                public void onFailure(int statusCode, Header[] headers, Throwable throwable,
+                                      JSONObject errorResponse) {
+//                    Log.d("nao foi JSONObject", errorResponse.toString());
+                    Log.d("nao foi JSONObject", "1");
+                }
 
-            @Override
-            public void onFailure(int statusCode, Header[] headers, Throwable throwable, JSONArray errorResponse) {
-                super.onFailure(statusCode, headers, throwable, errorResponse);
-                Log.d("nao foi JSONArray", errorResponse.toString());
-            }
-        });
+                @Override
+                public void onFailure(int statusCode, Header[] headers, String responseString, Throwable throwable) {
+                    super.onFailure(statusCode, headers, responseString, throwable);
+//                    Log.d("nao foi Throwable", responseString);
+                    Log.d("nao foi Throwable", "2");
+
+                }
+
+                @Override
+                public void onFailure(int statusCode, Header[] headers, Throwable throwable, JSONArray errorResponse) {
+                    super.onFailure(statusCode, headers, throwable, errorResponse);
+//                    Log.d("nao foi JSONArray", errorResponse.toString());
+                    Log.d("nao foi JSONArray", "3");
+                }
+            });
+
+
+        }
+        end = SystemClock.currentThreadTimeMillis();
+        Toast.makeText(getApplicationContext(), String.valueOf(end - begin), Toast.LENGTH_SHORT).show();
 
     }
 }
